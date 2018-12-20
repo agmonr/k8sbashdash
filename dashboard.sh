@@ -17,6 +17,7 @@ export COLOR_YELLOW='\e[1;33m'
 export COLOR_GRAY='\e[0;30m'
 export COLOR_LIGHT_GRAY='\e[0;37m'
 
+
 function echon {
   chrlen="${#1}"
   echo > /tmp/${2}.txt
@@ -25,11 +26,6 @@ function echon {
   echo >> /tmp/${2}.txt
 }
 
-if [ -z "${1}" ]; then
-  echo "Please provide a name space."
-  exit 2
-fi
-
 NameSpace=$1
 Count=0
 
@@ -37,11 +33,9 @@ clear
 while true; do 
 
   Columns=$(($( tput cols )-2 ))
+  Tlines=$(($( tput lines )-2 ))
   echon "~~~~~~~~~~ Pods " pods
   kubectl get pods --namespace=${NameSpace} -o wide | grep -e 'Running\|pending\|NAME' >> /tmp/pods.txt
-
-  echon "~~~~~~~~~~ Events " events 
-  kubectl get events --namespace=${NameSpace} | grep -v Normal >> /tmp/events.txt
 
   echon "~~~~~~~~~~ Deployments " deployments
   kubectl get deployments --namespace=${NameSpace} -o wide >> /tmp/deployments.txt 
@@ -49,11 +43,13 @@ while true; do
   echon "~~~~~~~~~~ Ingresses " ingresses
   kubectl get ingresses --namespace=${NameSpace} -o wide >> /tmp/ingresses.txt 
 
-
+  echon "~~~~~~~~~~ Events " events 
+  kubectl get events --namespace=${NameSpace} | grep -v Normal >> /tmp/events.txt
   
 
   tput cup 0 0 
-  for f in pods deployments ingresses; do
+  Line=1
+  for f in pods deployments ingresses events; do
     while read l; do
       if [[ $( echo ${l} | grep -ce "Deployments\|ingresses\|Pods\|~~" ) != "0" ]]; then
         echo -en "${COLOR_LIGHT_PURPLE}" 
@@ -65,16 +61,18 @@ while true; do
         echo -en "${COLOR_YELLOW}" 
       fi
       if [[ "${f}" == "pods" ]]; then
-        if [[ $( echo "${l}" | awk '{ print $4 }' ) != "0" ]] && [[ $( echo "${l}" | awk '{ print $3 }' ) == "Running" ]]; then
+        if [[ $( echo "${l}" | awk '{ print $4 }' ) != "0" ]] && [[ $( echo "${l}" | awk '{ print $3 }' ) == "Running" ]]; then #marking not read and restart pods
          echo -en "${COLOR_RED}" 
        fi
       fi
-         
       echo -e "${l}" | cut -c -${Columns}
       echo -en "${COLOR_NC}"
       tput el #clear to the end of the line
-      
-  done < /tmp/${f}.txt
+      if [[ "${Line}" -gt "${Tlines}" ]]; then
+        break
+      fi
+      let Line=${Line}+1
+     done < /tmp/${f}.txt
   done 
   sleep 0.1
 
