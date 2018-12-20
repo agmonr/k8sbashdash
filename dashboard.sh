@@ -81,8 +81,9 @@ while true; do
       fi
 
       if [[ "${f}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
-        let Ncolumns=${Columns}+89
-        echo $( echo -en "${l}" | cut -c 35-65  ; echo "..."; echo -en "${l}" | cut -c 89-${Ncolumns} )
+        let Ncolumns=${Columns}+228
+        echo $( echo "$( echo -en "${l}" | cut -c 35-64 )"
+        echo -en "${l}" | cut -c 220-${Ncolumns} ) 
       else
         echo -en "${l}" | cut -c -${Columns}
       fi
@@ -97,7 +98,7 @@ while true; do
      done < /tmp/${f}.txt
   done 
 
-  sleep 0.5
+  sleep 1
 
 done
 
