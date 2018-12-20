@@ -59,8 +59,10 @@ while true; do
 
       # pods
       if [[ "${f}" == "pods" ]]; then #marking less then 10 minutes pods
-         if [[ "$( echo ${l} | awk '{ print $5 }' | sed -e 's/m//' )" -lt 10  ]] ; then #marking young pods
-           echo -en "${COLOR_LIGHT_CYAN}" 
+         if [[ "$( echo ${l} | awk '{ print $5 }' | grep -c "m" )" != 0  ]] ; then #marking young pods
+           if [[ "$( echo ${l} | awk '{ print $5 }' | sed -e 's/m//' )" -lt 10  ]] ; then #marking young pods
+             echo -en "${COLOR_LIGHT_CYAN}" 
+           fi
          fi
          if [[ $( echo ${l} | grep -c '0/' ) != "0" ]]; then #running 0/x pods
            echo -en "${COLOR_LIGHT_RED}" 
@@ -78,7 +80,14 @@ while true; do
         echo -en "${COLOR_LIGHT_PURPLE}" 
       fi
 
-      echo -en "${l}" | cut -c -${Columns}
+      if [[ "${f}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
+        let Ncolumns=${Columns}+89
+        echo $( echo -en "${l}" | cut -c 35-65  ; echo "..."; echo -en "${l}" | cut -c 89-${Ncolumns} )
+      else
+        echo -en "${l}" | cut -c -${Columns}
+      fi
+
+
       echo -en "${COLOR_NC}"
       tput el #clear to the end of the line
       if [[ "${Line}" -gt "${Tlines}" ]]; then
