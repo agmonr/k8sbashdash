@@ -51,19 +51,30 @@ while true; do
   Line=1
   for f in pods deployments ingresses events; do
     while read l; do
-      if [[ $( echo ${l} | grep -ce "^~" ) != "0" ]]; then
-        echo -en "${COLOR_LIGHT_PURPLE}" 
-      fi
-      if [[ $( echo ${l} | grep -c '0/' ) != "0" ]]; then
-        echo -en "${COLOR_RED}" 
-      fi
-      if [[ $( echo ${l} | grep -c 'NAME' ) != "0" ]]; then
-        echo -en "${COLOR_YELLOW}" 
-      fi
       if [[ "${f}" == "pods" ]]; then
         if [[ $( echo "${l}" | awk '{ print $4 }' ) != "0" ]] && [[ $( echo "${l}" | awk '{ print $3 }' ) == "Running" ]]; then #marking not read and restart pods
          echo -en "${COLOR_RED}" 
        fi
+      fi
+      if [[ "${f}" == "events" ]]; then
+        if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart podsa
+         echo -en "${COLOR_RED}" 
+       fi
+      fi
+
+      if [[ "${f}" == "pods" ]]; then #marking less then 10 minutes pods
+        if [[ $( echo ${l} | awk '{ print $5 }' | grep -c "[0-9]m" ) == "1"  ]] ; then #marking young pods
+         echo -en "${COLOR_LIGHT_CYAN}" 
+       fi
+      fi
+      if [[ $( echo ${l} | grep -c 'NAME' ) != "0" ]]; then
+        echo -en "${COLOR_YELLOW}" 
+      fi
+      if [[ $( echo ${l} | grep -c '0/' ) != "0" ]]; then
+        echo -en "${COLOR_RED}" 
+      fi
+      if [[ $( echo ${l} | grep -ce "^~" ) != "0" ]]; then #header colors 
+        echo -en "${COLOR_LIGHT_PURPLE}" 
       fi
       echo -en "${l}" | cut -c -${Columns}
       echo -en "${COLOR_NC}"
@@ -74,6 +85,7 @@ while true; do
       let Line=${Line}+1
      done < /tmp/${f}.txt
   done 
+ 
   sleep 0.1
 
 done
