@@ -44,14 +44,14 @@ while true; do
   kubectl get ingresses --namespace=${NameSpace} -o wide >> /tmp/ingresses.txt 
 
   echon "~~~~~~~~~~ Events " events 
-  kubectl get events --namespace=${NameSpace} | grep -v Normal >> /tmp/events.txt
+  kubectl get events --namespace=${NameSpace}  >> /tmp/events.txt
   
 
-  tput cup 0 0 
+  tput home 
   Line=1
   for f in pods deployments ingresses events; do
     while read l; do
-      if [[ $( echo ${l} | grep -ce "Deployments\|ingresses\|Pods\|~~" ) != "0" ]]; then
+      if [[ $( echo ${l} | grep -ce "^~" ) != "0" ]]; then
         echo -en "${COLOR_LIGHT_PURPLE}" 
       fi
       if [[ $( echo ${l} | grep -c '0/' ) != "0" ]]; then
@@ -65,7 +65,7 @@ while true; do
          echo -en "${COLOR_RED}" 
        fi
       fi
-      echo -e "${l}" | cut -c -${Columns}
+      echo -en "${l}" | cut -c -${Columns}
       echo -en "${COLOR_NC}"
       tput el #clear to the end of the line
       if [[ "${Line}" -gt "${Tlines}" ]]; then
