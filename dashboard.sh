@@ -63,7 +63,7 @@ while true; do
       fi
 
       if [[ "${f}" == "pods" ]]; then #marking less then 10 minutes pods
-        if [[ $( echo ${l} | awk '{ print $5 }' | grep -c "[0-9]m" ) == "1"  ]] ; then #marking young pods
+        if [[ "$( echo ${l} | awk '{ print $5 }' | sed -e 's/m//' )" -lt 10  ]] ; then #marking young pods
          echo -en "${COLOR_LIGHT_CYAN}" 
        fi
       fi
@@ -85,8 +85,8 @@ while true; do
       let Line=${Line}+1
      done < /tmp/${f}.txt
   done 
- 
-  sleep 0.1
+
+  sleep 0.5
 
 done
 
