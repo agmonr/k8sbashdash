@@ -53,7 +53,7 @@ while true; do
     while read l; do
       if [[ "${f}" == "events" ]]; then
         if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart podsa
-         echo -en "${COLOR_RED}" 
+         echo -en "${COLOR_LIGHT_RED}" 
        fi
       fi
 
@@ -82,8 +82,8 @@ while true; do
 
       if [[ "${f}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
         let Ncolumns=${Columns}+228
-        echo $( echo "$( echo -en "${l}" | cut -c 35-64 )"
-        echo -en "${l}" | cut -c 220-${Ncolumns} ) 
+        echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")"
+        echo "${l}" | cut -c 220-${Ncolumns} 
       else
         echo -en "${l}" | cut -c -${Columns}
       fi
@@ -96,6 +96,7 @@ while true; do
       fi
       let Line=${Line}+1
      done < /tmp/${f}.txt
+    rm /tmp/${f}.txt
   done 
 
   sleep 1
