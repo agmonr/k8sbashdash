@@ -17,7 +17,6 @@ export COLOR_YELLOW='\e[1;33m'
 export COLOR_GRAY='\e[0;30m'
 export COLOR_LIGHT_GRAY='\e[0;37m'
 
-
 function echon {
   chrlen="${#1}"
   echo > /tmp/${2}.txt
@@ -26,12 +25,7 @@ function echon {
   echo >> /tmp/${2}.txt
 }
 
-NameSpace=$1
-Count=0
-
-clear
-while true; do 
-
+function get_status {
   Columns=$(($( tput cols )-2 ))
   Tlines=$(($( tput lines )-2 ))
   echon "~~~~~~~~~~ Pods " pods
@@ -45,20 +39,18 @@ while true; do
 
   echon "~~~~~~~~~~ Events " events 
   kubectl get events --namespace=${NameSpace}  >> /tmp/events.txt
-  
+}
 
-  tput home 
-  Line=1
-  for f in pods deployments ingresses events; do
+function display_status  {
     while read l; do
-      if [[ "${f}" == "events" ]]; then
+      if [[ "${element}" == "events" ]]; then
         if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart podsa
          echo -en "${COLOR_LIGHT_RED}" 
        fi
       fi
 
       # pods
-      if [[ "${f}" == "pods" ]]; then #marking less then 10 minutes pods
+      if [[ "${element}" == "pods" ]]; then #marking less then 10 minutes pods
          if [[ "$( echo ${l} | awk '{ print $5 }' | grep -c "m" )" != 0  ]] ; then #marking young pods
            if [[ "$( echo ${l} | awk '{ print $5 }' | sed -e 's/m//' )" -lt 10  ]] ; then #marking young pods
              echo -en "${COLOR_LIGHT_CYAN}" 
@@ -80,7 +72,7 @@ while true; do
         echo -en "${COLOR_LIGHT_PURPLE}" 
       fi
 
-      if [[ "${f}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
+      if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
         let Ncolumns=${Columns}+228
         echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")"
         echo "${l}" | cut -c 220-${Ncolumns} 
@@ -95,12 +87,42 @@ while true; do
         break
       fi
       let Line=${Line}+1
-     done < /tmp/${f}.txt
-    rm /tmp/${f}.txt
-  done 
+     done < /tmp/${element}.txt
+    rm /tmp/${element}.txt
+}
 
-  sleep 1
 
-done
+echo $1
+
+function check_param {
+  if [ -z "${1}" ]; then
+    echo 
+    echo "Please provide a namespace."
+    echo
+    kubectl get namespace
+    exit 2
+  else
+    NameSpace=$1
+  fi
+}
+
+check_param $1
+
+Count=0
+function main {
+  clear
+  while true; do 
+    get_status
+    tput home 
+    Line=1
+    for element in pods deployments ingresses events; do
+      display_status ${element}
+    done 
+    sleep 1
+  done
+}
+
+main
+
 
 #kubectl get cronjobs --namespace='${NameSpace}' | grep -v Normal
