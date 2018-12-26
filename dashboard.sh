@@ -20,7 +20,7 @@ export COLOR_LIGHT_GRAY='\e[0;37m'
 function echon {
   chrlen="${#1}"
   echo > /tmp/${2}.txt
-  echo -e -n  ${1} >>/tmp/${2}.txt
+  echo -e -n  "${1}" >>/tmp/${2}.txt
   for f in $( seq ${chrlen} ${Columns} ); do echo -n "~" >> /tmp/${2}.txt; done 
   echo >> /tmp/${2}.txt
 }
