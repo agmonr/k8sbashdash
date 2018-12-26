@@ -44,7 +44,7 @@ function get_status {
 function display_status  {
     while read l; do
       if [[ "${element}" == "events" ]]; then
-        if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart podsa
+        if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart pods
          echo -en "${COLOR_LIGHT_RED}" 
        fi
       fi
@@ -72,10 +72,11 @@ function display_status  {
         echo -en "${COLOR_LIGHT_PURPLE}" 
       fi
 
+      # events
       if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
         let Ncolumns=${Columns}+228
         echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")"
-        echo "${l}" | cut -c 220-${Ncolumns} 
+        echo "${l}" | cut -c 219-${Ncolumns} 
       else
         echo -en "${l}" | cut -c -${Columns}
       fi
