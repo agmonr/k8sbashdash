@@ -29,7 +29,7 @@ function get_status {
   Columns=$(($( tput cols )-2 ))
   Tlines=$(($( tput lines )-2 ))
   echon "~~~~~~~~~~ Pods " pods
-  kubectl get pods --namespace=${NameSpace} -o wide | grep -e 'Running\|pending\|NAME' >> /tmp/pods.txt
+  kubectl get pods --namespace=${NameSpace} -o wide | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> /tmp/pods.txt
 
   echon "~~~~~~~~~~ Deployments " deployments
   kubectl get deployments --namespace=${NameSpace} -o wide >> /tmp/deployments.txt 
@@ -74,8 +74,8 @@ function display_status  {
 
       # events
       if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
-        let Ncolumns=${Columns}+228
-        echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")"
+        let Ncolumns=${Columns}+200
+        echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")" #get only the evednts and pod names
         echo "${l}" | cut -c 219-${Ncolumns} 
       else
         echo -en "${l}" | cut -c -${Columns}
