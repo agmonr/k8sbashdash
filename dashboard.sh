@@ -74,7 +74,7 @@ function display_status  {
 
       # events
       if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
-        let Ncolumns=${Columns}+200
+        let Ncolumns=${Columns}+188
         echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")" #get only the evednts and pod names
         echo "${l}" | cut -c 219-${Ncolumns} 
       else
@@ -89,8 +89,14 @@ function display_status  {
       fi
       let Line=${Line}+1
      done < /tmp/${element}.txt
+   
     rm /tmp/${element}.txt
 }
+if [[ "${Line}" -lt "${Tlines}" ]]; then
+   for f in $( seq ${Line} ${Tline}); do
+    echo " "
+   done
+fi
 
 
 echo $1
