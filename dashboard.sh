@@ -71,7 +71,7 @@ function echon {
   printf "" > "${tmpfile1}"
   printf  "${1}" >> "${tmpfile1}"
   for f in $( seq ${chrlen} ${Columns} ); do printf "~" >> "${tmpfile1}"; done
-  echo "\n" >> "${tmpfile1}"
+  printf "\n" >> "${tmpfile1}"
 
 }
 
@@ -80,16 +80,16 @@ function get_status {
   Columns=$(($( tput cols )-2 ))
   Tlines=$(($( tput lines )-2 ))
   echon "~~~~~~~~~~ Pods " pods
-  kubectl get pods --namespace=${NameSpace} -o wide | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> "${tmpfile}-pods.txt"
+  kubectl get pods --namespace=${NameSpace} -o wide 2>>/dev/null | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> "${tmpfile}-pods.txt"
 
   echon "~~~~~~~~~~ Deployments " deployments
-  kubectl get deployments --namespace=${NameSpace} -o wide >> "${tmpfile}-deployments.txt"
+  kubectl get deployments --namespace=${NameSpace} -o wide 2>>/dev/null >> "${tmpfile}-deployments.txt"
 
   echon "~~~~~~~~~~ Ingresses " ingresses
-  kubectl get ingresses --namespace=${NameSpace} -o wide >>"${tmpfile}-ingresses.txt"
+  kubectl get ingresses --namespace=${NameSpace} -o wide 2>>/dev/null >>"${tmpfile}-ingresses.txt"
 
   echon "~~~~~~~~~~ Events " events 
-  kubectl get events --namespace=${NameSpace}  >> "${tmpfile}-events.txt"
+  kubectl get events --namespace=${NameSpace} 2>>/dev/null >> "${tmpfile}-events.txt"
 }
 
 
