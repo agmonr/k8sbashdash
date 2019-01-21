@@ -78,7 +78,6 @@ function echon {
 # putting status into files
 function get_status {
   Columns=$(($( tput cols )-2 ))
-  Tlines=$(($( tput lines )-2 ))
   echon "~~~~~~~~~~ Pods " pods
   kubectl get pods --namespace=${NameSpace} -o wide 2>>/dev/null | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> "${tmpfile}-pods.txt"
 
@@ -96,6 +95,8 @@ function get_status {
 # reading files line by line and setting colors 
 function display_status  {
     while read l; do
+
+      Tlines=$(($( tput lines )-2 ))
       if [[ "${element}" == "events" ]]; then
         if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart pods
          printf "${COLOR_LIGHT_RED}" 
