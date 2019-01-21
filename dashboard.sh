@@ -1,4 +1,5 @@
 #!/bin/bash
+reset
 export COLOR_NC='\e[0m' # No Color
 export COLOR_WHITE='\e[1;37m'
 export COLOR_BLACK='\e[0;30m'
@@ -16,36 +17,39 @@ export COLOR_BROWN='\e[0;33m'
 export COLOR_YELLOW='\e[1;33m'
 export COLOR_GRAY='\e[0;30m'
 export COLOR_LIGHT_GRAY='\e[0;37m'
+tmpfile=$(mktemp /tmp/k8sd-XXXXXX)
 
 function echon {
   chrlen="${#1}"
-  echo > /tmp/${2}.txt
-  echo -e -n  "${1}" >>/tmp/${2}.txt
-  for f in $( seq ${chrlen} ${Columns} ); do echo -n "~" >> /tmp/${2}.txt; done 
-  echo >> /tmp/${2}.txt
+  tmpfile1=${tmpfile}-${2}.txt
+  printf "" > "${tmpfile1}"
+  printf  "${1}" >> "${tmpfile1}"
+  for f in $( seq ${chrlen} ${Columns} ); do printf "~" >> "${tmpfile1}"; done
+  echo "" >> "${tmpfile1}"
+
 }
 
 function get_status {
   Columns=$(($( tput cols )-2 ))
   Tlines=$(($( tput lines )-2 ))
   echon "~~~~~~~~~~ Pods " pods
-  kubectl get pods --namespace=${NameSpace} -o wide | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> /tmp/pods.txt
+  kubectl get pods --namespace=${NameSpace} -o wide | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> "${tmpfile}-pods.txt"
 
   echon "~~~~~~~~~~ Deployments " deployments
-  kubectl get deployments --namespace=${NameSpace} -o wide >> /tmp/deployments.txt 
+  kubectl get deployments --namespace=${NameSpace} -o wide >> "${tmpfile}-deployments.txt"
 
   echon "~~~~~~~~~~ Ingresses " ingresses
-  kubectl get ingresses --namespace=${NameSpace} -o wide >> /tmp/ingresses.txt 
+  kubectl get ingresses --namespace=${NameSpace} -o wide >>"${tmpfile}-ingresses.txt"
 
   echon "~~~~~~~~~~ Events " events 
-  kubectl get events --namespace=${NameSpace}  >> /tmp/events.txt
+  kubectl get events --namespace=${NameSpace}  >> "${tmpfile}-events.txt"
 }
 
 function display_status  {
     while read l; do
       if [[ "${element}" == "events" ]]; then
         if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart pods
-         echo -en "${COLOR_LIGHT_RED}" 
+         printf "${COLOR_LIGHT_RED}" 
        fi
       fi
 
@@ -53,23 +57,23 @@ function display_status  {
       if [[ "${element}" == "pods" ]]; then #marking less then 10 minutes pods
          if [[ "$( echo ${l} | awk '{ print $5 }' | grep -c "m" )" != 0  ]] ; then #marking young pods
            if [[ "$( echo ${l} | awk '{ print $5 }' | sed -e 's/m//' )" -lt 10  ]] ; then #marking young pods
-             echo -en "${COLOR_LIGHT_CYAN}" 
+             printf "${COLOR_LIGHT_CYAN}" 
            fi
          fi
          if [[ $( echo ${l} | grep -c '0/' ) != "0" ]]; then #running 0/x pods
-           echo -en "${COLOR_LIGHT_RED}" 
+           printf "${COLOR_LIGHT_RED}" 
          fi
          if [[ $( echo "${l}" | awk '{ print $4 }' ) != "0" ]] && [[ $( echo "${l}" | awk '{ print $3 }' ) == "Running" ]]; then #marking not read and restart pods
-           echo -en "${COLOR_RED}" 
+           printf "${COLOR_RED}" 
          fi
       fi
 
       # Header
       if [[ $( echo ${l} | grep -c 'NAME' ) != "0" ]]; then
-        echo -en "${COLOR_YELLOW}" 
+        printf "${COLOR_YELLOW}" 
       fi
       if [[ $( echo ${l} | grep -ce "^~" ) != "0" ]]; then #header colors 
-        echo -en "${COLOR_LIGHT_PURPLE}" 
+        printf "${COLOR_LIGHT_PURPLE}" 
       fi
 
       # events
@@ -88,13 +92,14 @@ function display_status  {
         break
       fi
       let Line=${Line}+1
-     done < /tmp/${element}.txt
+     done < "${tmpfile}-${element}.txt"
    
-    rm /tmp/${element}.txt
+    rm "${tmpfile}-${element}.txt"
+
 }
 if [[ "${Line}" -lt "${Tlines}" ]]; then
    for f in $( seq ${Line} ${Tline}); do
-    echo " "
+    printf " "
    done
 fi
 
