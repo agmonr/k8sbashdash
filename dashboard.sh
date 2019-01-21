@@ -19,7 +19,7 @@ while [ "$1" != "" ]; do
         -n | --namespace )      shift
                                 NameSpace=$1
                                 ;;
-        -s | --sleep )          shift
+        -t | --timewait )       shift
                                 sleeptime="$1"
                                 ;;
         -h | --help )           usage
@@ -32,6 +32,14 @@ done
 if [ "${NameSpace}" == "" ]; then
   usage
   exit
+fi
+
+CheckNS=$( kubectl get namespaces | grep -c -w "${NameSpace}"" " )
+if [ "${CheckNS}" == "0" ]; then
+  echo "No namespace ${NameSpace}"
+  echo "Please check"
+  kubectl get namespaces
+  exit 2
 fi
 
 
