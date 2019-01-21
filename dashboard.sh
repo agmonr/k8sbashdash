@@ -85,14 +85,14 @@ function display_status  {
       # events
       if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
         let Ncolumns=${Columns}+188
-        echo -n "$( echo -n "$( echo -en "${l}" | cut -c 36-65 )")" #get only the evednts and pod names
-        echo "${l}" | cut -c 219-${Ncolumns} 
+        printf "$( printf "$( printf "${l}" | cut -c 36-65 )")" #get only the evednts and pod names
+        printf "${l}" | cut -c 219-${Ncolumns} 
       else
-        echo -en "${l}" | cut -c -${Columns}
+        printf "${l}" | cut -c -${Columns}
       fi
 
 
-      echo -en "${COLOR_NC}"
+      printf "${COLOR_NC}"
       tput el #clear to the end of the line
       if [[ "${Line}" -gt "${Tlines}" ]]; then
         break
