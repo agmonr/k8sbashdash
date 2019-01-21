@@ -24,17 +24,18 @@ export COLOR_LIGHT_GRAY='\e[0;37m'
 tmpfile=$(mktemp /tmp/k8sd-XXXXXX)
 
 
-
+# creating headers
 function echon {
   chrlen="${#1}"
   tmpfile1=${tmpfile}-${2}.txt
   printf "" > "${tmpfile1}"
   printf  "${1}" >> "${tmpfile1}"
   for f in $( seq ${chrlen} ${Columns} ); do printf "~" >> "${tmpfile1}"; done
-  echo "" >> "${tmpfile1}"
+  echo "\n" >> "${tmpfile1}"
 
 }
 
+# putting status into files
 function get_status {
   Columns=$(($( tput cols )-2 ))
   Tlines=$(($( tput lines )-2 ))
@@ -51,6 +52,8 @@ function get_status {
   kubectl get events --namespace=${NameSpace}  >> "${tmpfile}-events.txt"
 }
 
+
+# reading files line by line and setting colors 
 function display_status  {
     while read l; do
       if [[ "${element}" == "events" ]]; then
@@ -86,11 +89,10 @@ function display_status  {
       if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
         let Ncolumns=${Columns}+188
         printf "$( printf "$( printf "${l}" | cut -c 36-65 )")" #get only the evednts and pod names
-        printf "${l}" | cut -c 219-${Ncolumns} 
+        printf "${l}\n" | cut -c 219-${Ncolumns} 
       else
-        printf "${l}" | cut -c -${Columns}
+        printf "${l}\n" | cut -c -${Columns} #all of the prints but events
       fi
-
 
       printf "${COLOR_NC}"
       tput el #clear to the end of the line
@@ -105,7 +107,7 @@ function display_status  {
 }
 if [[ "${Line}" -lt "${Tlines}" ]]; then
    for f in $( seq ${Line} ${Tline}); do
-    printf " "
+    printf "\n"
    done
 fi
 
