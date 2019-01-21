@@ -3,6 +3,38 @@
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
 
+export sleeptime=0.5
+
+function usage {
+  printf "%s\n" "Usage:"
+  printf "%s\n" "-n namespace"
+  printf "%s\n" "-t sleep time in seconds"
+  exit 0 
+}
+
+
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -n | --namespace )      shift
+                                NameSpace=$1
+                                ;;
+        -s | --sleep )          shift
+                                sleeptime="$1"
+                                ;;
+        -h | --help )           usage
+                                ;;
+        * )                     usage
+    esac
+    shift
+done 
+
+if [ "${NameSpace}" == "" ]; then
+  usage
+  exit
+fi
+
+
 reset
 export COLOR_NC='\e[0m' # No Color
 export COLOR_WHITE='\e[1;37m'
@@ -112,36 +144,6 @@ if [[ "${Line}" -lt "${Tlines}" ]]; then
 fi
 
 
-echo $1
-
-function check_param {
-  if [ -z "${1}" ]; then
-    echo 
-    echo "Please provide a namespace."
-    echo
-    kubectl get namespace
-    exit 2
-  else
-    NameSpace=$1
-  fi
-}
-
-check_param $1
-
-Count=0
-function main {
-  clear
-  while true; do 
-    get_status
-    tput home 
-    Line=1
-    for element in pods deployments ingresses events; do
-      display_status ${element}
-    done 
-    sleep 1
-  done
-}
-
 function ctrl_c() {
   echo
   printf "${COLOR_YELLOW}"
@@ -152,8 +154,21 @@ function ctrl_c() {
 }
 
 
+function main {
+  clear
+  while true; do 
+    get_status
+    tput home 
+    Line=1
+    for element in pods deployments ingresses events; do
+      display_status ${element}
+    done 
+    sleep "${sleeptime}"
+  done
+}
 
+
+check_params
 main
 
 
-#kubectl get cronjobs --namespace='${NameSpace}' | grep -v Normal
