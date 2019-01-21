@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
+
 reset
 export COLOR_NC='\e[0m' # No Color
 export COLOR_WHITE='\e[1;37m'
@@ -18,6 +22,8 @@ export COLOR_YELLOW='\e[1;33m'
 export COLOR_GRAY='\e[0;30m'
 export COLOR_LIGHT_GRAY='\e[0;37m'
 tmpfile=$(mktemp /tmp/k8sd-XXXXXX)
+
+
 
 function echon {
   chrlen="${#1}"
@@ -133,6 +139,17 @@ function main {
     sleep 1
   done
 }
+
+function ctrl_c() {
+  echo
+  printf "${COLOR_YELLOW}"
+  printf  "bye bye"
+  echo
+  printf "${COLOR_NC}"
+  exit 0
+}
+
+
 
 main
 
