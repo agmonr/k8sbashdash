@@ -77,7 +77,7 @@ function echon {
 
 # putting status into files
 function get_status {
-  Columns=$(($( tput cols )-2 ))
+  Columns=$(($( tput cols )))
   echon "~~~~~~~~~~ Pods " pods
   kubectl get pods --namespace=${NameSpace} -o wide 2>>/dev/null | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> "${tmpfile}-pods.txt"
 
@@ -94,9 +94,14 @@ function get_status {
 
 # reading files line by line and setting colors 
 function display_status  {
+    StartTlines=$(($( tput lines )-2 ))
     while read l; do
-
       Tlines=$(($( tput lines )-2 ))
+
+      if [ "${StartTlines}" != "${Tlines}" ]; then
+          break
+      fi
+
       if [[ "${element}" == "events" ]]; then
         if [[ $( echo ${l} | grep -c 'Normal' ) != "1"  ]] ; then #marking not read and restart pods
          printf "${COLOR_LIGHT_RED}" 
@@ -128,9 +133,10 @@ function display_status  {
 
       # events
       if [[ "${element}" == "events" ]] && [[ $( echo ${l} | grep -ce "^~" ) == "0" ]]; then
-        let Ncolumns=${Columns}+188
-        printf "$( printf "$( printf "${l}" | cut -c 36-65 )")" #get only the evednts and pod names
-        printf "${l}\n" | cut -c 219-${Ncolumns} 
+        let Ncolumns=${Columns}-21
+        PodName=${l:35:20} #get only the evednts and pod names
+        Event="${l:220:${Ncolumns}}"
+        printf "${PodName} ${Event}\n"
       else
         printf "${l}\n" | cut -c -${Columns} #all of the prints but events
       fi
@@ -142,23 +148,22 @@ function display_status  {
       fi
       let Line=${Line}+1
      done < "${tmpfile}-${element}.txt"
-   
     rm "${tmpfile}-${element}.txt"
 
 }
-if [[ "${Line}" -lt "${Tlines}" ]]; then
-   for f in $( seq ${Line} ${Tline}); do
-    printf "\n"
-   done
-fi
 
+
+function print2end { #clear to scren bottom
+   if [[ "${Line}" -lt "${Tlines}" ]]; then
+        for f in $( seq ${Line} ${Tlines}); do
+        printf "\n"
+        tput el 
+     done
+   fi
+}
 
 function ctrl_c() {
-  echo
-  printf "${COLOR_YELLOW}"
-  printf  "bye bye"
-  echo
-  printf "${COLOR_NC}"
+  printf "\n\n${COLOR_YELLOW}bye bye${COLOR_NC}\n\n"
   exit 0
 }
 
@@ -172,6 +177,7 @@ function main {
     for element in pods deployments ingresses events; do
       display_status ${element}
     done 
+    print2end
     sleep "${sleeptime}"
   done
 }
