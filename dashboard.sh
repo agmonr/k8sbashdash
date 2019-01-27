@@ -8,7 +8,8 @@ export sleeptime=0.5
 function usage {
   printf "%s\n" "Usage:"
   printf "%s\n" "-n namespace"
-  printf "%s\n" "-t sleep time in seconds"
+  printf "%s\n" "-t sleep time in seconds (default=0.5)"
+  printf "%s\n" "   when -t == 0 show once and exit"
   exit 0 
 }
 
@@ -77,7 +78,7 @@ function echon {
 
 # putting status into files
 function get_status {
-  Columns=$(($( tput cols )))
+  Columns=$(($( tput cols )-1))
   echon "~~~~~~~~~~ Pods " pods
   kubectl get pods --namespace=${NameSpace} -o wide 2>>/dev/null | grep -e 'Running\|pending\|NAME' | grep -v 'post-' >> "${tmpfile}-pods.txt"
 
@@ -178,7 +179,11 @@ function main {
       display_status ${element}
     done 
     print2end
-    sleep "${sleeptime}"
+    if [ "${sleeptime}" == "0" ]; then
+      exit 0
+    else
+      sleep "${sleeptime}"
+    fi
   done
 }
 
